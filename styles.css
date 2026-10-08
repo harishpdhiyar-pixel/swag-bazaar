@@ -1,0 +1,83 @@
+/* Custom CSS for Swag Bazaar */
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0c0d12;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #292d3f;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #f59e0b;
+}
+
+/* Hide scrollbar for category slider while keeping scrollable */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Modal slide animation */
+@keyframes modalSlide {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-modalSlide {
+    animation: modalSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Product Card Glow & Hover Transitions */
+.product-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow: 0 12px 30px -10px rgba(245, 158, 11, 0.15);
+}
+
+/* Category Story Pill Ring */
+.category-story-ring {
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    padding: 2.5px;
+    border-radius: 9999px;
+    transition: transform 0.2s ease;
+}
+
+.category-story-ring:hover {
+    transform: scale(1.05);
+}
+
+.category-story-ring.active {
+    background: linear-gradient(135deg, #f59e0b 0%, #ff3366 100%);
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.5);
+}
+
+/* Badge Pulse */
+@keyframes softPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.75; }
+}
+
+.animate-softPulse {
+    animation: softPulse 2s infinite ease-in-out;
+}

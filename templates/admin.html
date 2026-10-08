@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>एडमिन पोर्टल - स्वैग बाज़ार (SWAG BAZAAR Admin)</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              500: '#f97316',
+              600: '#ea580c'
+            }
+          },
+          fontFamily: {
+            hindi: ['"Hind"', 'sans-serif'],
+            sans: ['"Poppins"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #0b0f19;
+      color: #f1f5f9;
+    }
+    .hindi-text { font-family: 'Hind', sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  {% if not is_logged_in %}
+  <!-- LOGIN SCREEN -->
+  <div class="flex-1 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center">
+      
+      <div class="w-16 h-16 bg-gradient-to-tr from-orange-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white shadow-lg shadow-orange-500/25">
+        <i data-lucide="shield-check" class="w-8 h-8"></i>
+      </div>
+
+      <h1 class="text-2xl font-black text-white hindi-text">स्वैग बाज़ार एडमिन पोर्टल</h1>
+      <p class="text-xs text-slate-400 mt-1 mb-6">कस्टमर ऑर्डर्स और एफिलिएट प्रोडक्ट्स देखने के लिए पिन दर्ज करें</p>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 text-left mb-1.5">एडमिन सुरक्षा पिन (Admin PIN)</label>
+          <input 
+            type="password" 
+            id="adminPin" 
+            placeholder="डिफ़ॉल्ट पिन: 1234" 
+            required 
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-4 text-center text-lg tracking-widest text-white focus:outline-none focus:border-orange-500"
+          >
+          <p class="text-[11px] text-slate-500 mt-1.5 text-left">💡 पहला लॉगिन: पिन <strong>1234</strong> है।</p>
+        </div>
+
+        <button 
+          type="submit" 
+          id="loginBtn"
+          class="w-full bg-gradient-to-r from-orange-500 to-pink-600 hover:from-orange-600 hover:to-pink-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg active:scale-95"
+        >
+          डैशबोर्ड में प्रवेश करें (Login)
+        </button>
+      </form>
+
+      <div class="mt-6 pt-4 border-t border-slate-800">
+        <a href="/" class="text-xs text-slate-400 hover:text-white flex items-center justify-center gap-1">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+          <span>स्टोर पर वापस जाएं</span>
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  {% else %}
+  <!-- ADMIN DASHBOARD (LOGGED IN) -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/" class="flex flex-col">
+          <span class="text-xl font-black text-orange-500 hindi-text">स्वैग बाज़ार</span>
+          <span class="text-[9px] font-bold text-slate-400 tracking-wider">ADMIN CONTROL PANEL</span>
+        </a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="/" target="_blank" class="text-xs text-slate-300 hover:text-white flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+          <i data-lucide="external-link" class="w-3.5 h-3.5 text-orange-400"></i>
+          <span>लाइव स्टोर देखें</span>
+        </a>
+        <button onclick="openSettingsModal()" class="text-xs text-slate-300 hover:text-white flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+          <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+          <span>सेटिंग्स</span>
+        </button>
+        <a href="/api/admin/logout" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-950/40 border border-red-800/40 px-3 py-1.5 rounded-lg">
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+          <span>लॉगआउट</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1">
+    
+    <!-- STATS OVERVIEW CARDS -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-orange-500/10 text-orange-400 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <span class="text-xs text-slate-400 font-medium">कुल ऑर्डर्स (Total Orders)</span>
+          <h3 class="text-2xl font-black text-white">{{ stats.total_orders }}</h3>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="indian-rupee" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <span class="text-xs text-slate-400 font-medium">कुल रेवेन्यू (Revenue)</span>
+          <h3 class="text-2xl font-black text-emerald-400">₹{{ stats.total_revenue }}</h3>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="bell" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <span class="text-xs text-slate-400 font-medium">नए ऑर्डर्स (Pending)</span>
+          <h3 class="text-2xl font-black text-blue-400">{{ stats.new_orders }}</h3>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center flex-shrink-0">
+          <i data-lucide="package" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <span class="text-xs text-slate-400 font-medium">एक्टिव प्रोडक्ट्स (Listed)</span>
+          <h3 class="text-2xl font-black text-purple-400">{{ stats.total_products }}</h3>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TABS NAVIGATION -->
+    <div class="flex items-center gap-2 border-b border-slate-800 mb-6 pb-2">
+      <button onclick="switchTab('orders')" id="tabBtnOrders" class="px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-orange-500 text-white flex items-center gap-2">
+        <i data-lucide="users" class="w-4 h-4"></i>
+        <span>कस्टमर ऑर्डर्स डाटा ({{ orders|length }})</span>
+      </button>
+      <button onclick="switchTab('products')" id="tabBtnProducts" class="px-4 py-2 font-bold text-xs sm:text-sm rounded-xl text-slate-400 hover:text-white bg-slate-800 flex items-center gap-2">
+        <i data-lucide="tag" class="w-4 h-4"></i>
+        <span>प्रोडक्ट्स व एफिलिएट लिंक्स ({{ products|length }})</span>
+      </button>
+      <button onclick="openAddProductModal()" class="ml-auto bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-md">
+        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+        <span>नया प्रोडक्ट जोड़ें</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: CUSTOMER ORDERS TABLE -->
+    <div id="tabContentOrders">
+      
+      <!-- Table Header & Actions -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <h3 class="text-lg font-bold text-white hindi-text">सभी कस्टमर्स के ऑर्डर्स और पता</h3>
+          <p class="text-xs text-slate-400">इंस्टाग्राम और स्टोर से आए सभी ग्राहकों का मोबाइल नंबर, डिलीवरी पता और प्रोडक्ट विवरण।</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Download Excel CSV Button -->
+          <a 
+            href="/api/admin/orders/export" 
+            class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-md transition-all active:scale-95"
+            title="Excel फ़ाइल में सभी कस्टमर का डेटा डाउनलोड करें"
+          >
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Excel / CSV डाउनलोड</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Orders Table Container -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="py-3.5 px-4">ऑर्डर कोड</th>
+                <th class="py-3.5 px-4">तारीख</th>
+                <th class="py-3.5 px-4">ग्राहक का नाम</th>
+                <th class="py-3.5 px-4">मोबाइल / व्हाट्सएप</th>
+                <th class="py-3.5 px-4">डिलीवरी पता व पिनकोड</th>
+                <th class="py-3.5 px-4">सामान (Product)</th>
+                <th class="py-3.5 px-4">साइज़ / मात्रा</th>
+                <th class="py-3.5 px-4">मूल्य</th>
+                <th class="py-3.5 px-4">स्थिति (Status)</th>
+                <th class="py-3.5 px-4 text-center">एक्शन</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+              {% if orders %}
+                {% for ord in orders %}
+                <tr class="hover:bg-slate-800/50 transition-colors">
+                  <td class="py-3 px-4 font-mono font-bold text-orange-400 whitespace-nowrap">
+                    {{ ord.order_id }}
+                  </td>
+                  <td class="py-3 px-4 text-slate-400 whitespace-nowrap text-[11px]">
+                    {{ ord.created_at[:16] }}
+                  </td>
+                  <td class="py-3 px-4 font-bold text-white whitespace-nowrap">
+                    {{ ord.customer_name }}
+                  </td>
+                  <td class="py-3 px-4 whitespace-nowrap">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-mono text-slate-200">{{ ord.customer_phone }}</span>
+                      <a 
+                        href="https://wa.me/91{{ ord.customer_phone }}?text=नमस्ते%20{{ ord.customer_name }}%20जी,%20Swag%20Bazaar%20से%20आपका%20ऑर्डर%20{{ ord.order_id }}%20कन्फर्म%20करने%20के%20लिए%20संपर्क%20किया%20है।" 
+                        target="_blank" 
+                        class="text-emerald-400 hover:text-emerald-300 p-1 bg-emerald-950/60 rounded"
+                        title="कस्टमर को सीधा व्हाट्सएप मैसेज भेजें"
+                      >
+                        <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                      </a>
+                    </div>
+                  </td>
+                  <td class="py-3 px-4 max-w-xs leading-relaxed text-[11px]">
+                    <div class="font-medium text-slate-200">{{ ord.customer_address }}</div>
+                    <div class="text-slate-400">{{ ord.customer_city }}, {{ ord.customer_state }} - <strong>{{ ord.customer_pincode }}</strong></div>
+                  </td>
+                  <td class="py-3 px-4 font-medium text-white max-w-xs truncate">
+                    {{ ord.product_title }}
+                  </td>
+                  <td class="py-3 px-4 whitespace-nowrap">
+                    <span class="bg-slate-800 px-2 py-0.5 rounded font-mono text-[11px]">{{ ord.selected_size }}</span>
+                    <span class="text-slate-400 ml-1">x{{ ord.quantity }}</span>
+                  </td>
+                  <td class="py-3 px-4 font-bold text-emerald-400 whitespace-nowrap">
+                    ₹{{ ord.product_price }}
+                    <span class="text-[10px] block text-slate-400 font-normal">{{ ord.payment_method }}</span>
+                  </td>
+                  <td class="py-3 px-4 whitespace-nowrap">
+                    <select 
+                      onchange="updateOrderStatus({{ ord.id }}, this.value)" 
+                      class="bg-slate-950 border border-slate-700 text-xs rounded-lg py-1 px-2 text-white focus:outline-none focus:border-orange-500"
+                    >
+                      <option value="New Order" {% if ord.status == 'New Order' %}selected{% endif %}>🔵 New Order</option>
+                      <option value="Confirmed" {% if ord.status == 'Confirmed' %}selected{% endif %}>🟡 Confirmed</option>
+                      <option value="Shipped" {% if ord.status == 'Shipped' %}selected{% endif %}>🚚 Shipped</option>
+                      <option value="Delivered" {% if ord.status == 'Delivered' %}selected{% endif %}>🟢 Delivered</option>
+                      <option value="Cancelled" {% if ord.status == 'Cancelled' %}selected{% endif %}>🔴 Cancelled</option>
+                    </select>
+                  </td>
+                  <td class="py-3 px-4 text-center whitespace-nowrap">
+                    <a 
+                      href="https://wa.me/91{{ ord.customer_phone }}?text=नमस्ते%20{{ ord.customer_name }},%20आपका%20ऑर्डर%20{{ ord.order_id }}%20 dispatch%20हो%20गया%20है!" 
+                      target="_blank"
+                      class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[10px] px-2.5 py-1 rounded-lg inline-flex items-center gap-1"
+                    >
+                      <span>व्हाट्सएप</span>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+              <tr>
+                <td colspan="10" class="py-12 text-center text-slate-500">
+                  <div class="text-4xl mb-2">📦</div>
+                  <p class="text-sm font-bold text-slate-300">अभी तक कोई ऑर्डर नहीं आया है।</p>
+                  <p class="text-xs text-slate-500 mt-1">जैसे ही इंस्टाग्राम या स्टोर से कोई कस्टमर ऑर्डर करेगा, उसका पूरा डाटा यहाँ दिखेगा।</p>
+                </td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: PRODUCTS & AFFILIATE LINKS MANAGER -->
+    <div id="tabContentProducts" class="hidden">
+      
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-lg font-bold text-white hindi-text">स्टोर प्रोडक्ट्स और एफिलिएट लिंक्स</h3>
+          <p class="text-xs text-slate-400">7 कैटगरीज के सभी प्रोडक्ट्स। आप कभी भी नया सामान या अपना एफिलिएट लिंक बदल सकते हैं।</p>
+        </div>
+      </div>
+
+      <!-- Products Grid in Admin -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for prod in products %}
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+          <div class="flex gap-3">
+            <img src="{{ prod.image_url }}" alt="{{ prod.title }}" class="w-20 h-20 object-cover rounded-xl border border-slate-800 flex-shrink-0">
+            <div class="flex-1 min-w-0">
+              <span class="text-[10px] font-bold text-orange-400 uppercase">{{ prod.category }}</span>
+              <h4 class="text-sm font-bold text-white truncate hindi-text">{{ prod.title_hi if prod.title_hi else prod.title }}</h4>
+              <p class="text-xs text-slate-400 truncate">{{ prod.title }}</p>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="font-extrabold text-white text-sm">₹{{ prod.price }}</span>
+                <span class="text-xs text-slate-500 line-through">₹{{ prod.original_price }}</span>
+                <span class="text-xs text-emerald-400 font-bold">{{ prod.discount }}% OFF</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Affiliate link preview & edit -->
+          <div class="mt-3 pt-3 border-t border-slate-800 text-xs">
+            <div class="flex items-center justify-between text-slate-400 mb-1">
+              <span>एफिलिएट लिंक ({{ prod.platform_name }}):</span>
+            </div>
+            <div class="bg-slate-950 p-2 rounded-lg font-mono text-[11px] text-orange-300 break-all select-all border border-slate-800">
+              {{ prod.affiliate_url }}
+            </div>
+          </div>
+
+          <!-- Product Action Buttons -->
+          <div class="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between">
+            <a href="{{ prod.affiliate_url }}" target="_blank" class="text-xs text-blue-400 hover:underline flex items-center gap-1">
+              <i data-lucide="external-link" class="w-3 h-3"></i>
+              <span>लिंक टेस्ट करें</span>
+            </a>
+            <div class="flex items-center gap-2">
+              <button onclick="deleteProduct({{ prod.id }})" class="text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-red-950/40 rounded border border-red-800/30">
+                हटाएं (Delete)
+              </button>
+            </div>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ADD PRODUCT MODAL -->
+  <div id="addProductModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      
+      <button onclick="closeAddProductModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800 p-1.5 rounded-full">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <h3 class="text-lg font-black text-white hindi-text mb-1">नया प्रोडक्ट जोड़ें (Add Product)</h3>
+      <p class="text-xs text-slate-400 mb-4">अपने स्टोर में नया सामान और अपना एफिलिएट लिंक डालें</p>
+
+      <form onsubmit="handleAddProductSubmit(event)" class="space-y-3 text-xs">
+        
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">प्रोडक्ट का नाम (English):</label>
+          <input type="text" id="newTitle" required placeholder="उदा. Men Oversized Graphic T-Shirt" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">प्रोडक्ट का नाम (हिन्दी):</label>
+          <input type="text" id="newTitleHi" placeholder="उदा. मेन्स ओवरसाइज़्ड ग्राफिक टी-शर्ट" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">कैटगरी (Category - 7 विकल्प):</label>
+            <select id="newCategory" required class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+              <option value="jeans">👖 Jeans (जींस)</option>
+              <option value="shirt">👔 Shirt (शर्ट)</option>
+              <option value="pant">👖 Pant (पैंट)</option>
+              <option value="tshirt">👕 T-shirt (टी-शर्ट)</option>
+              <option value="cap">🧢 Cap (कैप)</option>
+              <option value="chashma">🕶️ Chashma (चश्मा)</option>
+              <option value="beauty">💄 Beauty (ब्यूटी)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">प्लेटफ़ॉर्म नाम (Platform):</label>
+            <input type="text" id="newPlatform" placeholder="उदा. Amazon / Meesho / Resell" value="Amazon / Resell" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">विक्रय मूल्य (Selling Price ₹):</label>
+            <input type="number" id="newPrice" required placeholder="उदा. 499" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">मूल मूल्य (Original MRP ₹):</label>
+            <input type="number" id="newOriginalPrice" required placeholder="उदा. 1299" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">फोटो लिंक (Image URL):</label>
+          <input type="url" id="newImageUrl" required placeholder="https://images.unsplash.com/... या कोई भी इमेज URL" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">🔗 एफिलिएट / रीसेल लिंक (Affiliate Link):</label>
+          <input type="url" id="newAffiliateUrl" required placeholder="https://amazon.in?tag=yourtag... या meesho लिंक" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">बैज (Badge):</label>
+            <input type="text" id="newBadge" value="🔥 Instagram Viral" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">उपलब्ध साइज़ (Sizes):</label>
+            <input type="text" id="newSizes" value="M, L, XL" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">विवरण (Description):</label>
+          <textarea id="newDescription" rows="2" placeholder="प्रोडक्ट की खासियतें..." class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white"></textarea>
+        </div>
+
+        <div class="pt-2">
+          <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-pink-600 text-white font-bold py-2.5 rounded-xl text-sm shadow-lg">
+            प्रोडक्ट सेव करें (Save Product)
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- STORE SETTINGS MODAL -->
+  <div id="settingsModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800 p-1.5 rounded-full">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <h3 class="text-lg font-black text-white hindi-text mb-1">स्टोर सेटिंग्स</h3>
+      <p class="text-xs text-slate-400 mb-4">व्हाट्सएप नंबर व एडमिन पिन बदलें</p>
+
+      <form onsubmit="handleSettingsSubmit(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">दुकानदार का व्हाट्सएप नंबर (WhatsApp Number):</label>
+          <input type="text" id="settingWhatsapp" value="{{ settings.get('whatsapp_number', '919876543210') }}" required class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+          <span class="text-[10px] text-slate-500">कंट्री कोड के साथ लिखें (उदा. 919876543210)</span>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">एडमिन लॉगिन पिन (Admin PIN):</label>
+          <input type="password" id="settingPin" value="{{ settings.get('admin_pin', '1234') }}" required class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">इंस्टाग्राम हैंडल (Instagram Handle):</label>
+          <input type="text" id="settingInsta" value="{{ settings.get('insta_handle', '@swagbazaar_official') }}" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">UPI ID (पेमेंट के लिए):</label>
+          <input type="text" id="settingUpi" value="{{ settings.get('upi_id', 'swagbazaar@upi') }}" class="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 px-3 text-white">
+        </div>
+
+        <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 rounded-xl text-xs transition-colors">
+          सेटिंग्स अपडेट करें
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {% endif %}
+
+  <script>
+    lucide.createIcons();
+
+    // Admin Login Handler
+    async function handleLogin(e) {
+      e.preventDefault();
+      const pin = document.getElementById('adminPin').value.trim();
+      const btn = document.getElementById('loginBtn');
+      btn.innerText = 'जाँच हो रही है...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin })
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.reload();
+        } else {
+          alert(data.message || 'गलत पिन!');
+          btn.innerText = 'डैशबोर्ड में प्रवेश करें (Login)';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        alert('सर्वर एरर, कृपया पुनः प्रयास करें!');
+        btn.innerText = 'डैशबोर्ड में प्रवेश करें (Login)';
+        btn.disabled = false;
+      }
+    }
+
+    // Switch Tabs
+    function switchTab(tab) {
+      if (tab === 'orders') {
+        document.getElementById('tabContentOrders').classList.remove('hidden');
+        document.getElementById('tabContentProducts').classList.add('hidden');
+        document.getElementById('tabBtnOrders').className = 'px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-orange-500 text-white flex items-center gap-2';
+        document.getElementById('tabBtnProducts').className = 'px-4 py-2 font-bold text-xs sm:text-sm rounded-xl text-slate-400 hover:text-white bg-slate-800 flex items-center gap-2';
+      } else {
+        document.getElementById('tabContentOrders').classList.add('hidden');
+        document.getElementById('tabContentProducts').classList.remove('hidden');
+        document.getElementById('tabBtnProducts').className = 'px-4 py-2 font-bold text-xs sm:text-sm rounded-xl bg-orange-500 text-white flex items-center gap-2';
+        document.getElementById('tabBtnOrders').className = 'px-4 py-2 font-bold text-xs sm:text-sm rounded-xl text-slate-400 hover:text-white bg-slate-800 flex items-center gap-2';
+      }
+      lucide.createIcons();
+    }
+
+    // Update Status
+    async function updateOrderStatus(id, status) {
+      try {
+        const res = await fetch(`/api/admin/orders/${id}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        const data = await res.json();
+        if (data.success) {
+          // Success toast
+        }
+      } catch (err) {
+        alert('स्टेटस अपडेट नहीं हो सका!');
+      }
+    }
+
+    // Add Product Modal
+    function openAddProductModal() {
+      document.getElementById('addProductModal').classList.remove('hidden');
+    }
+    function closeAddProductModal() {
+      document.getElementById('addProductModal').classList.add('hidden');
+    }
+
+    // Submit New Product
+    async function handleAddProductSubmit(e) {
+      e.preventDefault();
+      const payload = {
+        title: document.getElementById('newTitle').value,
+        title_hi: document.getElementById('newTitleHi').value,
+        category: document.getElementById('newCategory').value,
+        platform_name: document.getElementById('newPlatform').value,
+        price: document.getElementById('newPrice').value,
+        original_price: document.getElementById('newOriginalPrice').value,
+        image_url: document.getElementById('newImageUrl').value,
+        affiliate_url: document.getElementById('newAffiliateUrl').value,
+        badge: document.getElementById('newBadge').value,
+        sizes: document.getElementById('newSizes').value,
+        description: document.getElementById('newDescription').value
+      };
+
+      const res = await fetch('/api/admin/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('नया प्रोडक्ट स्टोर में जुड़ गया है!');
+        window.location.reload();
+      } else {
+        alert('एरर: ' + data.message);
+      }
+    }
+
+    // Delete Product
+    async function deleteProduct(id) {
+      if (!confirm('क्या आप वाकई इस प्रोडक्ट को हटाना चाहते हैं?')) return;
+      const res = await fetch(`/api/admin/products/${id}/delete`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        window.location.reload();
+      }
+    }
+
+    // Settings Modal
+    function openSettingsModal() {
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+    async function handleSettingsSubmit(e) {
+      e.preventDefault();
+      const payload = {
+        whatsapp_number: document.getElementById('settingWhatsapp').value,
+        admin_pin: document.getElementById('settingPin').value,
+        insta_handle: document.getElementById('settingInsta').value,
+        upi_id: document.getElementById('settingUpi').value
+      };
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('सेटिंग्स सुरक्षित हो गईं!');
+        window.location.reload();
+      }
+    }
+  </script>
+</body>
+</html>
